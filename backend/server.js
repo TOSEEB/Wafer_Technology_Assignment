@@ -13,9 +13,29 @@ const { authMiddleware } = require("./middleware/auth");
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// =================== PRODUCTION CORS SETUP ===================
+const allowedOrigins = [
+  "https://wafer-technology-assignment-3.onrender.com" // your frontend URL
+];
+
+app.use(cors({
+  origin: function(origin, callback){
+    // allow requests with no origin (like Postman) or from allowed origins
+    if(!origin || allowedOrigins.indexOf(origin) !== -1){
+      callback(null, true);
+    } else {
+      callback(new Error("CORS policy: Not allowed by CORS"));
+    }
+  },
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  credentials: true
+}));
+
+// =================== MIDDLEWARE ===================
 app.use(express.json());
 
+// =================== ENV & PORT ===================
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
