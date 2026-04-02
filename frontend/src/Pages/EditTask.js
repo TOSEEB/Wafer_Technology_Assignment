@@ -1,4 +1,3 @@
-// Pages/EditTask.js
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
@@ -14,22 +13,25 @@ function EditTask() {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Incomplete");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchTask = async () => {
       if (!token) return;
+      setLoading(true);
       try {
-        const res = await axios.get(`${API_URL}/tasks`, { headers: { Authorization: `Bearer ${token}` } });
-        const task = res.data.find((t) => t._id === id);
-        if (task) {
-          setTitle(task.title);
-          setDescription(task.description);
-          setStatus(task.status);
-        } else {
-          setError("Task not found");
-        }
+        // Fetch only the task we need
+        const res = await axios.get(`${API_URL}/tasks/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const task = res.data;
+        setTitle(task.title);
+        setDescription(task.description);
+        setStatus(task.status);
       } catch (err) {
-        setError("Failed to fetch task");
+        setError(err.response?.data?.message || "Failed to fetch task");
+      } finally {
+        setLoading(false);
       }
     };
     fetchTask();
@@ -37,14 +39,21 @@ function EditTask() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || loading) return;
 
+    setLoading(true);
+    setError("");
     try {
-      await axios.put(`${API_URL}/tasks/${id}`, { title, description, status }, 
-        { headers: { Authorization: `Bearer ${token}` } });
+      await axios.put(
+        `${API_URL}/tasks/${id}`,
+        { title, description, status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       navigate("/home");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update task");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,16 +61,24 @@ function EditTask() {
     <div className="container compact">
       <h1 className="title">Edit Task</h1>
       {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit} className="add-form">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task Title *" required />
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Task Description" />
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="Incomplete">Incomplete</option>
-          <option value="Complete">Complete</option>
-        </select>
-        <button className="add-btn">Update Task</button>
-      </form>
-      <button className="back-btn" onClick={() => navigate("/home")}>← Back</button>
+      {loading ? (
+        <p>Loading task...</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="add-form">
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task Title *" required />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Task Description" />
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="Incomplete">Incomplete</option>
+            <option value="Complete">Complete</option>
+          </select>
+          <button className="add-btn" disabled={loading}>
+            {loading ? "Updating..." : "Update Task"}
+          </button>
+        </form>
+      )}
+      <button className="back-btn" onClick={() => navigate("/home")} disabled={loading}>
+        ← Back
+      </button>
     </div>
   );
 }
