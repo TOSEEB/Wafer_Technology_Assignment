@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -13,24 +13,38 @@ function Auth({ setToken }) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Clear error when user types
+  useEffect(() => {
+    if (error) setError("");
+  }, [email, password, confirmPassword]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
 
-    setError("");
+    // Frontend password mismatch check
     if (!isLogin && password !== confirmPassword) {
       return setError("Passwords do not match");
     }
 
     setLoading(true);
+    setError("");
+
     try {
       const url = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
       const res = await axios.post(url, { email, password });
+
+      // Successful login/register
       localStorage.setItem("token", res.data.token);
       setToken(res.data.token);
       navigate("/home");
     } catch (err) {
-      setError(err.response?.data?.message || "Authentication error");
+      // Show proper backend error if available
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -41,10 +55,28 @@ function Auth({ setToken }) {
       <h1 className="title">{isLogin ? "Login" : "Register"}</h1>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit} className="add-form">
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         {!isLogin && (
-          <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
         )}
         <button type="submit" className="add-btn" disabled={loading}>
           {loading ? (isLogin ? "Logging in..." : "Registering...") : isLogin ? "Login" : "Register"}
