@@ -13,10 +13,11 @@ function Auth({ setToken }) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Clear error when user types
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (error) setError("");
-  }, [email, password, confirmPassword, error]);
+  }, [email, password, confirmPassword]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const handleSubmit = async (e) => {
     e.preventDefault();

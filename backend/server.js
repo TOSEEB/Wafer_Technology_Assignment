@@ -15,16 +15,17 @@ const app = express();
 app.use(express.json());
 
 // --- CORS Setup ---
+// Add your new Vercel deployment here
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://wafer-technology-assignment-3.onrender.com",
-  "https://wafer-technology-assignment-final.onrender.com"
+  "https://wafer-technology-assignment-final.onrender.com",
+  "https://wafer-technology-assignment-djv9.vercel.app"
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, true); // Allow non-browser requests (like Postman)
       if (allowedOrigins.includes(origin)) callback(null, true);
       else callback(new Error(`CORS policy: Origin ${origin} not allowed`));
     },
@@ -157,6 +158,5 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: "Login error" });
   }
 });
-
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
