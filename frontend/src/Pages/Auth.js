@@ -1,4 +1,3 @@
-// Pages/Auth.js
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +7,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 function Auth({ setToken }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // added
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -15,6 +15,11 @@ function Auth({ setToken }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Only check confirm password if registering
+    if (!isLogin && password !== confirmPassword) {
+      return setError("Passwords do not match");
+    }
 
     try {
       const url = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
@@ -46,7 +51,18 @@ function Auth({ setToken }) {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit" className="add-btn">{isLogin ? "Login" : "Register"}</button>
+        {!isLogin && (
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        )}
+        <button type="submit" className="add-btn">
+          {isLogin ? "Login" : "Register"}
+        </button>
       </form>
       <button className="back-btn" onClick={() => setIsLogin(!isLogin)}>
         {isLogin ? "Create Account" : "Already have an account?"}

@@ -11,116 +11,115 @@ const User = require("./models/User");
 const { authMiddleware } = require("./middleware/auth");
 
 dotenv.config();
-
 const app = express();
-
-// =================== PRODUCTION CORS SETUP ===================
-const allowedOrigins = [
-  "https://wafer-technology-assignment-3.onrender.com" // your frontend URL
-];
-
-app.use(cors({
-  origin: function(origin, callback){
-    // allow requests with no origin (like Postman) or from allowed origins
-    if(!origin || allowedOrigins.indexOf(origin) !== -1){
-      callback(null, true);
-    } else {
-      callback(new Error("CORS policy: Not allowed by CORS"));
-    }
-  },
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  credentials: true
-}));
-
-// =================== MIDDLEWARE ===================
 app.use(express.json());
 
-// =================== ENV & PORT ===================
+// CORS setup
+const allowedOrigins = [
+  "http://localhost:3000", // local dev
+  "https://wafer-technology-assignment-3.onrender.com", // deployed frontend
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, mobile apps, SSR)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS policy: Origin ${origin} not allowed`));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
+
+// Env variables
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!MONGO_URI || !JWT_SECRET) {
-  console.error("❌ MONGO_URI or JWT_SECRET not defined in .env");
+  console.error("MONGO_URI or JWT_SECRET not defined in .env");
   process.exit(1);
 }
 
 // Connect to MongoDB
 connectDB(MONGO_URI);
 
-// =================== TASK ROUTES ===================
+// --- ROUTES ---
 
-// GET all tasks for logged-in user
+// GET /tasks
 app.get("/tasks", authMiddleware, async (req, res) => {
   try {
     const tasks = await Task.find({ user: req.user.id }).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
-    console.error("Fetch tasks error:", err);
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// CREATE new task
+// POST /tasks
 app.post("/tasks", authMiddleware, async (req, res) => {
   try {
     const { title, description, status } = req.body;
-    if (!title || title.trim() === "") {
-      return res.status(400).json({ message: "Title is required" });
-    }
+    if (!title?.trim()) return res.status(400).json({ message: "Title required" });
 
-    const newTask = new Task({
+    const task = new Task({
       title: title.trim(),
       description: description?.trim() || "",
       status: status || "Incomplete",
       user: req.user.id,
     });
 
-    const savedTask = await newTask.save();
-    res.status(201).json(savedTask);
+    const saved = await task.save();
+    res.status(201).json(saved);
   } catch (err) {
-    console.error("Create task error:", err);
-    res.status(400).json({ message: "Error creating task", error: err.message });
+    console.error(err);
+    res.status(500).json({ message: "Error creating task" });
   }
 });
 
-// UPDATE task
+// PUT /tasks/:id
 app.put("/tasks/:id", authMiddleware, async (req, res) => {
   try {
-    const updatedTask = await Task.findOneAndUpdate(
+    const updated = await Task.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
       req.body,
       { new: true }
     );
-    res.json(updatedTask);
+    if (!updated) return res.status(404).json({ message: "Task not found" });
+    res.json(updated);
   } catch (err) {
-    console.error("Update task error:", err);
-    res.status(400).json({ message: "Error updating task" });
+    console.error(err);
+    res.status(500).json({ message: "Error updating task" });
   }
 });
 
-// DELETE task
+// DELETE /tasks/:id
 app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   try {
-    await Task.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+    const deleted = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+    if (!deleted) return res.status(404).json({ message: "Task not found" });
     res.json({ message: "Task deleted" });
   } catch (err) {
-    console.error("Delete task error:", err);
-    res.status(400).json({ message: "Error deleting task" });
+    console.error(err);
+    res.status(500).json({ message: "Error deleting task" });
   }
 });
 
-// =================== AUTH ROUTES ===================
-
-// REGISTER
+// POST /register
 app.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ message: "Email & password required" });
+    if (!email || !password) return res.status(400).json({ message: "Email & password required" });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ message: "User already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
     const user = new User({ email, password: hashed });
@@ -129,29 +128,28 @@ app.post("/register", async (req, res) => {
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
     res.json({ token });
   } catch (err) {
-    console.error("Register error:", err);
+    console.error(err);
     res.status(500).json({ message: "Register error" });
   }
 });
 
-// LOGIN
+// POST /login
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Wrong password" });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ message: "Wrong password" });
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
     res.json({ token });
   } catch (err) {
-    console.error("Login error:", err);
+    console.error(err);
     res.status(500).json({ message: "Login error" });
   }
 });
 
-// =================== START SERVER ===================
+// Start server
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

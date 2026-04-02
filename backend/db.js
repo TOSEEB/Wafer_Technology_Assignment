@@ -1,13 +1,12 @@
+// db.js
 const mongoose = require("mongoose");
 
-const connectDB = async (uri) => {
-  if (!uri) throw new Error("MongoDB URI not provided in .env");
-
+const connectDB = async (MONGO_URI) => {
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(MONGO_URI); // no options needed
     console.log("MongoDB Connected");
-  } catch (error) {
-    console.error("DB Connection Error:", error);
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
     process.exit(1);
   }
 };
