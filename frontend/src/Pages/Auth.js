@@ -16,7 +16,7 @@ function Auth({ setToken }) {
   // Clear error when user types
   useEffect(() => {
     if (error) setError("");
-  }, [email, password, confirmPassword]);
+  }, [email, password, confirmPassword, error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

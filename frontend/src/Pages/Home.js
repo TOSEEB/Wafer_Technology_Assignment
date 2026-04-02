@@ -29,7 +29,7 @@ function Home({ setToken }) {  // 👈 accept setToken prop
       }
     };
     fetchTasks();
-  }, [token, navigate]);
+  }, [token, navigate, setToken]);
 
   const toggleStatus = async (taskId) => {
     setTasks((prev) =>
