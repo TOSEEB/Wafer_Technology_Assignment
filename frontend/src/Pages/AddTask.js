@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +12,13 @@ function AddTask() {
   const [loading, setLoading] = useState(false); // Prevent multiple clicks
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+  // Clear error when user types
+  /* eslint-disable react-hooks/exhaustive-deps */
+  useEffect(() => {
+    if (error) setError("");
+  }, [title, description, status]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const handleSubmit = async (e) => {
     e.preventDefault();

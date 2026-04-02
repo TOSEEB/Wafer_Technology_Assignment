@@ -70,6 +70,7 @@ function Home({ setToken }) {  // 👈 accept setToken prop
     if (filter !== "All") filtered = filtered.filter((t) => t.status === filter);
     if (sort === "name") filtered.sort((a, b) => a.title.localeCompare(b.title));
     if (sort === "status") filtered.sort((a, b) => a.status.localeCompare(b.status));
+    else filtered.sort((a, b) => a._id.localeCompare(b._id)); // stable default order
     return filtered;
   }, [tasks, search, filter, sort]);
 
