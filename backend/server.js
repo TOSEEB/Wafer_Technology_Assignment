@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-/
+
 const allowedOrigins = [
   "http://localhost:3000",
   "https://wafer-technology-assignment-3.onrender.com"
