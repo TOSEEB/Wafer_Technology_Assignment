@@ -45,8 +45,11 @@ connectDB(MONGO_URI);
 
 
 const path = require("path");
+
 app.use(express.static(path.join(__dirname, "frontend/build")));
-app.get("*", (req, res) => {
+
+// Catch-all: send index.html for any unknown route (Express 5 compatible)
+app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
 
