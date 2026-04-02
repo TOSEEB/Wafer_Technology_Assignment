@@ -16,28 +16,21 @@ app.use(express.json());
 
 // CORS setup
 const allowedOrigins = [
-  "http://localhost:3000", // local dev
-  "https://wafer-technology-assignment-3.onrender.com", // deployed frontend
+  "http://localhost:3000", 
+  "https://wafer-technology-assignment-3.onrender.com"
 ];
-
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, mobile apps, SSR)
       if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS policy: Origin ${origin} not allowed`));
-      }
+      if (allowedOrigins.includes(origin)) callback(null, true);
+      else callback(new Error(`CORS policy: Origin ${origin} not allowed`));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
-// Env variables
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -50,13 +43,33 @@ if (!MONGO_URI || !JWT_SECRET) {
 // Connect to MongoDB
 connectDB(MONGO_URI);
 
+
+const path = require("path");
+app.use(express.static(path.join(__dirname, "frontend/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
+});
+
+
 // --- ROUTES ---
 
-// GET /tasks
+// GET all tasks
 app.get("/tasks", authMiddleware, async (req, res) => {
   try {
-    const tasks = await Task.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const tasks = await Task.find({ user: req.user.id }).sort({ createdAt: -1 }).lean();
     res.json(tasks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET single task
+app.get("/tasks/:id", authMiddleware, async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.id, user: req.user.id }).lean();
+    if (!task) return res.status(404).json({ message: "Task not found" });
+    res.json(task);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -91,7 +104,7 @@ app.put("/tasks/:id", authMiddleware, async (req, res) => {
       { _id: req.params.id, user: req.user.id },
       req.body,
       { new: true }
-    );
+    ).lean();
     if (!updated) return res.status(404).json({ message: "Task not found" });
     res.json(updated);
   } catch (err) {
@@ -103,7 +116,7 @@ app.put("/tasks/:id", authMiddleware, async (req, res) => {
 // DELETE /tasks/:id
 app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   try {
-    const deleted = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+    const deleted = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.id }).lean();
     if (!deleted) return res.status(404).json({ message: "Task not found" });
     res.json({ message: "Task deleted" });
   } catch (err) {
@@ -151,5 +164,9 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+
+
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`)); 
+
+

@@ -1,4 +1,3 @@
-// App.js
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Auth from "./Pages/Auth";
@@ -19,10 +18,16 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Auth setToken={setToken} />} />
+        {/* Auth / login page */}
+        <Route path="/" element={!token ? <Auth setToken={setToken} /> : <Navigate to="/home" />} />
+
+        {/* Protected routes */}
         <Route path="/home" element={token ? <Home /> : <Navigate to="/" />} />
         <Route path="/add" element={token ? <AddTask /> : <Navigate to="/" />} />
         <Route path="/edit/:id" element={token ? <EditTask /> : <Navigate to="/" />} />
+
+        {/* Catch-all: redirect based on login status */}
+        <Route path="*" element={token ? <Navigate to="/home" /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
