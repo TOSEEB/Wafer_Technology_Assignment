@@ -1,4 +1,4 @@
-
+// server.js
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-
+// --- CORS Setup ---
 const allowedOrigins = [
   "http://localhost:3000",
   "https://wafer-technology-assignment-3.onrender.com"
@@ -42,6 +42,7 @@ if (!MONGO_URI || !JWT_SECRET) {
   process.exit(1);
 }
 
+// --- Connect to MongoDB ---
 connectDB(MONGO_URI);
 
 // --- API ROUTES ---
@@ -57,7 +58,7 @@ app.get("/tasks", authMiddleware, async (req, res) => {
   }
 });
 
-
+// Get single task
 app.get("/tasks/:id", authMiddleware, async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, user: req.user.id }).lean();
@@ -69,7 +70,7 @@ app.get("/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-
+// Create task
 app.post("/tasks", authMiddleware, async (req, res) => {
   try {
     const { title, description, status } = req.body;
@@ -90,7 +91,7 @@ app.post("/tasks", authMiddleware, async (req, res) => {
   }
 });
 
-
+// Update task
 app.put("/tasks/:id", authMiddleware, async (req, res) => {
   try {
     const updated = await Task.findOneAndUpdate(
@@ -106,6 +107,7 @@ app.put("/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// Delete task
 app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   try {
     const deleted = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.id }).lean();
@@ -117,7 +119,7 @@ app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-
+// Register user
 app.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -138,7 +140,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-
+// Login user
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -156,13 +158,14 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
+// --- Serve React Frontend ---
+// Static files
 app.use(express.static(path.join(__dirname, "frontend/build")));
 
-
-app.get("/:catchAll(*)", (req, res) => {
+// SPA catch-all (non-API routes)
+app.get(/^\/(?!tasks|login|register).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
 
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// --- Start server ---
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
