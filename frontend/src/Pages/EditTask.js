@@ -15,7 +15,6 @@ function EditTask() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Clear error when user types
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (error) setError("");
@@ -27,7 +26,6 @@ function EditTask() {
       if (!token) return;
       setLoading(true);
       try {
-        // Fetch only the task we need
         const res = await axios.get(`${API_URL}/tasks/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });

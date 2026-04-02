@@ -9,11 +9,10 @@ function AddTask() {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Incomplete");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Prevent multiple clicks
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Clear error when user types
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (error) setError("");

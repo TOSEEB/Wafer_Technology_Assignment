@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-function Home({ setToken }) {  // 👈 accept setToken prop
+function Home({ setToken }) {
   const [tasks, setTasks] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [search, setSearch] = useState("");
@@ -23,7 +23,7 @@ function Home({ setToken }) {  // 👈 accept setToken prop
         console.error("Fetch error:", err);
         if (err.response?.status === 401) {
           localStorage.removeItem("token");
-          setToken(null);  // 👈 clear state on 401 too
+          setToken(null);
           navigate("/");
         }
       }
@@ -58,10 +58,9 @@ function Home({ setToken }) {  // 👈 accept setToken prop
     }
   };
 
-  // ✅ Fixed logout: clears both localStorage AND React state
   const logout = () => {
     localStorage.removeItem("token");
-    setToken(null);  // 👈 this is the key fix
+    setToken(null);
     navigate("/");
   };
 

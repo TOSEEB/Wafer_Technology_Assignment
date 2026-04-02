@@ -14,8 +14,6 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// --- CORS Setup ---
-// Add your new Vercel deployment here
 const allowedOrigins = [
   "http://localhost:3000",
   "https://wafer-technology-assignment-final.onrender.com",
@@ -25,7 +23,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Allow non-browser requests (like Postman)
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) callback(null, true);
       else callback(new Error(`CORS policy: Origin ${origin} not allowed`));
     },
@@ -43,10 +41,7 @@ if (!MONGO_URI || !JWT_SECRET) {
   process.exit(1);
 }
 
-// --- Connect to MongoDB ---
 connectDB(MONGO_URI);
-
-// --- API ROUTES ---
 
 // Get all tasks
 app.get("/tasks", authMiddleware, async (req, res) => {
@@ -159,4 +154,4 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

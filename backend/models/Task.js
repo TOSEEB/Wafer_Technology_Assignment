@@ -1,4 +1,3 @@
-// models/Task.js
 const mongoose = require("mongoose");
 
 const TaskSchema = new mongoose.Schema(
@@ -8,8 +7,10 @@ const TaskSchema = new mongoose.Schema(
     status: { type: String, default: "Incomplete" },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
+  
   { timestamps: true }
 );
 
 const Task = mongoose.model("Task", TaskSchema);
-module.exports = Task; // default export
+
+module.exports = Task; 

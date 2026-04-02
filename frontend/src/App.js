@@ -19,7 +19,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={!token ? <Auth setToken={setToken} /> : <Navigate to="/home" />} />
-        <Route path="/home" element={token ? <Home setToken={setToken} /> : <Navigate to="/" />} />  {/* 👈 pass setToken */}
+        <Route path="/home" element={token ? <Home setToken={setToken} /> : <Navigate to="/" />} />
         <Route path="/add" element={token ? <AddTask /> : <Navigate to="/" />} />
         <Route path="/edit/:id" element={token ? <EditTask /> : <Navigate to="/" />} />
         <Route path="*" element={token ? <Navigate to="/home" /> : <Navigate to="/" />} />

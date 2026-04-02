@@ -23,7 +23,6 @@ function Auth({ setToken }) {
     e.preventDefault();
     if (loading) return;
 
-    // Frontend password mismatch check
     if (!isLogin && password !== confirmPassword) {
       return setError("Passwords do not match");
     }
