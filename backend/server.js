@@ -4,7 +4,6 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const path = require("path");
 
 const connectDB = require("./db");
 const Task = require("./models/Task");
@@ -18,7 +17,8 @@ app.use(express.json());
 // --- CORS Setup ---
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://wafer-technology-assignment-3.onrender.com"
+  "https://wafer-technology-assignment-3.onrender.com",
+  "https://wafer-technology-assignment-final.onrender.com"
 ];
 
 app.use(
@@ -158,14 +158,5 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// --- Serve React Frontend ---
-// Static files
-app.use(express.static(path.join(__dirname, "frontend/build")));
 
-// SPA catch-all (non-API routes)
-app.get(/^\/(?!tasks|login|register).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
-});
-
-// --- Start server ---
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
