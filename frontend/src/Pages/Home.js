@@ -1,66 +1,77 @@
-// Pages/Home.js
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-function Home() {
+function Home({ setToken }) {  // 👈 accept setToken prop
   const [tasks, setTasks] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [sort, setSort] = useState("none");
-
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const fetchTasks = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${API_URL}/tasks`, { headers: { Authorization: `Bearer ${token}` } });
-      setTasks(res.data);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/");
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!token) return;
+      try {
+        const res = await axios.get(`${API_URL}/tasks`, { headers: { Authorization: `Bearer ${token}` } });
+        setTasks(res.data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        if (err.response?.status === 401) {
+          localStorage.removeItem("token");
+          setToken(null);  // 👈 clear state on 401 too
+          navigate("/");
+        }
       }
+    };
+    fetchTasks();
+  }, [token, navigate]);
+
+  const toggleStatus = async (taskId) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t._id === taskId ? { ...t, status: t.status === "Complete" ? "Incomplete" : "Complete" } : t
+      )
+    );
+    try {
+      const task = tasks.find((t) => t._id === taskId);
+      await axios.put(
+        `${API_URL}/tasks/${taskId}`,
+        { status: task.status === "Complete" ? "Incomplete" : "Complete" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("Failed to update status", err);
     }
   };
 
-  const toggleStatus = async (task) => {
-    if (!token) return;
-    await axios.put(`${API_URL}/tasks/${task._id}`, 
-      { status: task.status === "Complete" ? "Incomplete" : "Complete" }, 
-      { headers: { Authorization: `Bearer ${token}` } });
-    fetchTasks();
+  const deleteTask = async (taskId) => {
+    setTasks((prev) => prev.filter((t) => t._id !== taskId));
+    try {
+      await axios.delete(`${API_URL}/tasks/${taskId}`, { headers: { Authorization: `Bearer ${token}` } });
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
   };
 
-  const deleteTask = async (id) => {
-    if (!token) return;
-    await axios.delete(`${API_URL}/tasks/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-    fetchTasks();
-  };
-
+  // ✅ Fixed logout: clears both localStorage AND React state
   const logout = () => {
     localStorage.removeItem("token");
+    setToken(null);  // 👈 this is the key fix
     navigate("/");
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const filteredTasks = tasks
-    .filter((t) => t.title.toLowerCase().includes(search.toLowerCase()))
-    .filter((t) => (filter === "All" ? true : t.status === filter));
-
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (sort === "name") return a.title.localeCompare(b.title);
-    if (sort === "status") return a.status.localeCompare(b.status);
-    return 0;
-  });
+  const displayedTasks = useMemo(() => {
+    let filtered = tasks.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()));
+    if (filter !== "All") filtered = filtered.filter((t) => t.status === filter);
+    if (sort === "name") filtered.sort((a, b) => a.title.localeCompare(b.title));
+    if (sort === "status") filtered.sort((a, b) => a.status.localeCompare(b.status));
+    return filtered;
+  }, [tasks, search, filter, sort]);
 
   return (
     <div className="container">
@@ -88,13 +99,13 @@ function Home() {
       </div>
 
       <div className="task-list">
-        {sortedTasks.length === 0 ? <p className="no-tasks">No tasks found.</p> :
-          sortedTasks.map((task) => (
+        {displayedTasks.length === 0 ? <p className="no-tasks">No tasks found.</p> :
+          displayedTasks.map((task) => (
             <div key={task._id} className="task-card">
               <div className="task-header">
                 <div
                   className={`status-dot ${task.status === "Complete" ? "complete" : "incomplete"}`}
-                  onClick={() => toggleStatus(task)}
+                  onClick={() => toggleStatus(task._id)}
                   title="Toggle status"
                 >
                   {task.status === "Complete" ? "✓" : ""}

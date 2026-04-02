@@ -18,15 +18,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth / login page */}
         <Route path="/" element={!token ? <Auth setToken={setToken} /> : <Navigate to="/home" />} />
-
-        {/* Protected routes */}
-        <Route path="/home" element={token ? <Home /> : <Navigate to="/" />} />
+        <Route path="/home" element={token ? <Home setToken={setToken} /> : <Navigate to="/" />} />  {/* 👈 pass setToken */}
         <Route path="/add" element={token ? <AddTask /> : <Navigate to="/" />} />
         <Route path="/edit/:id" element={token ? <EditTask /> : <Navigate to="/" />} />
-
-        {/* Catch-all: redirect based on login status */}
         <Route path="*" element={token ? <Navigate to="/home" /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
