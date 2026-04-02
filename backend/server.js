@@ -1,9 +1,10 @@
-// server.js
+
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const path = require("path");
 
 const connectDB = require("./db");
 const Task = require("./models/Task");
@@ -14,11 +15,12 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// CORS setup
+/
 const allowedOrigins = [
-  "http://localhost:3000", 
+  "http://localhost:3000",
   "https://wafer-technology-assignment-3.onrender.com"
 ];
+
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -40,23 +42,11 @@ if (!MONGO_URI || !JWT_SECRET) {
   process.exit(1);
 }
 
-// Connect to MongoDB
 connectDB(MONGO_URI);
 
+// --- API ROUTES ---
 
-const path = require("path");
-
-app.use(express.static(path.join(__dirname, "frontend/build")));
-
-// Catch-all: send index.html for any unknown route (Express 5 compatible)
-app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
-});
-
-
-// --- ROUTES ---
-
-// GET all tasks
+// Get all tasks
 app.get("/tasks", authMiddleware, async (req, res) => {
   try {
     const tasks = await Task.find({ user: req.user.id }).sort({ createdAt: -1 }).lean();
@@ -67,7 +57,7 @@ app.get("/tasks", authMiddleware, async (req, res) => {
   }
 });
 
-// GET single task
+
 app.get("/tasks/:id", authMiddleware, async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, user: req.user.id }).lean();
@@ -79,7 +69,7 @@ app.get("/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// POST /tasks
+
 app.post("/tasks", authMiddleware, async (req, res) => {
   try {
     const { title, description, status } = req.body;
@@ -100,7 +90,7 @@ app.post("/tasks", authMiddleware, async (req, res) => {
   }
 });
 
-// PUT /tasks/:id
+
 app.put("/tasks/:id", authMiddleware, async (req, res) => {
   try {
     const updated = await Task.findOneAndUpdate(
@@ -116,7 +106,6 @@ app.put("/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /tasks/:id
 app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   try {
     const deleted = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.id }).lean();
@@ -128,7 +117,7 @@ app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// POST /register
+
 app.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -149,7 +138,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// POST /login
+
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -168,8 +157,12 @@ app.post("/login", async (req, res) => {
 });
 
 
+app.use(express.static(path.join(__dirname, "frontend/build")));
 
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`)); 
+app.get("/:catchAll(*)", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
+});
 
 
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
