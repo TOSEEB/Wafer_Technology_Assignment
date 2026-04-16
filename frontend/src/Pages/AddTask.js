@@ -13,11 +13,11 @@ function AddTask() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  /* eslint-disable react-hooks/exhaustive-deps */
+  
   useEffect(() => {
     if (error) setError("");
   }, [title, description, status]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+ 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
