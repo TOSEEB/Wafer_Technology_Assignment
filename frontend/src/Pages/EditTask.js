@@ -15,11 +15,11 @@ function EditTask() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* eslint-disable react-hooks/exhaustive-deps */
+ 
   useEffect(() => {
     if (error) setError("");
   }, [title, description, status]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+ 
 
   useEffect(() => {
     const fetchTask = async () => {
