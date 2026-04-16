@@ -13,11 +13,11 @@ function Auth({ setToken }) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  /* eslint-disable react-hooks/exhaustive-deps */
+  
   useEffect(() => {
     if (error) setError("");
   }, [email, password, confirmPassword]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+ 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,12 +34,12 @@ function Auth({ setToken }) {
       const url = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
       const res = await axios.post(url, { email, password });
 
-      // Successful login/register
+    
       localStorage.setItem("token", res.data.token);
       setToken(res.data.token);
       navigate("/home");
     } catch (err) {
-      // Show proper backend error if available
+    
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
